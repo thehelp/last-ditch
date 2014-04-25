@@ -1,0 +1,36 @@
+{
+  "name": "thehelp-last-ditch",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/server/index.js",
+
+  "dependencies": {
+    "async": "0.7.x",
+    "lodash": "2.x",
+    "winston": "0.7.x"
+  },
+  "peerDependencies": {
+    "thehelp-messaging": "0.1.x"
+  },
+  "devDependencies": {
+    "grunt": "0.4.x",
+    "thehelp-core": "git+ssh://git@infra:thehelp-core#v1.4.0",
+    "thehelp-project": "git+ssh://git@infra:thehelp-project#v2.4.4",
+    "thehelp-messaging": "git+ssh://git@infra:thehelp-messaging#v0.1.2",
+    "thehelp-test": "git+ssh://git@infra:thehelp-test#v2.0.6",
+    "blanket": "git+ssh://git@github.com:scottnonnenberg/blanket#v1.1.6"
+  },
+
+  "scripts": {
+    "blanket": {
+      "data-cover-only": "src",
+      "data-cover-never": "['lib/','node_modules/','test/','src/client']"
+    }
+  },
+
+  "author": "Scott Nonnenberg",
+  "repository": {
+    "type": "git",
+    "url": "git@infra:thehelp-last-ditch"
+  }
+}
