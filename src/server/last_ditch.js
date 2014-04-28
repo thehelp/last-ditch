@@ -24,23 +24,11 @@ function LastDitch(options) {
     this.development = process.env.NODE_ENV === 'development';
   }
 
-  this.sending = false;
   this.twilio = new Twilio();
-
-  this.setGracefulWorker(options.gracefulWorker);
 }
 
 module.exports = LastDitch;
 
-LastDitch.prototype.setGracefulWorker = function(gracefulWorker) {
-  var _this = this;
-
-  if (gracefulWorker) {
-    gracefulWorker.addCheck(function() {
-      return _this.sending === false;
-    });
-  }
-};
 
 LastDitch.prototype.send = function(err, req, cb) {
   var stack = err ? err.stack : '';
@@ -67,7 +55,6 @@ LastDitch.prototype.send = function(err, req, cb) {
 };
 
 LastDitch.prototype.sendSMS = function(entry, cb) {
-  var _this = this;
   var sms = {
     to: process.env.NOTIFY_SMS_TO,
     from: process.env.NOTIFY_SMS_FROM,
@@ -87,11 +74,10 @@ LastDitch.prototype.sendSMS = function(entry, cb) {
   sms.body += entry.stack;
   sms.body = this.twilio.truncateForSMS(sms.body);
 
-  this.sending = true;
   winston.info('Sending SMS message with crash information...');
   this.twilio.send(sms, function(err) {
     winston.info('Done sending SMS');
-    _this.sending = false;
+
     if (cb) {
       cb(err);
     }
