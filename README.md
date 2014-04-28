@@ -72,7 +72,12 @@ Tests, static analysis, documentation generation and more are all run by default
 
 ## History
 
-### 0.1.0
+### 0.2.0 (2014-04-28)
+
+* Removing direct support for `GracefulWorker` and keeping track of whether we're actively sending to Twilio; now expect users to rely on the callback.
+* Additional documentation
+
+### 0.1.0 (2014-04-25)
 
 * Default send function returned on `require()` of this module
 * `LastDitch` class available for direct use
