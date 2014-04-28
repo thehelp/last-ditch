@@ -1,11 +1,22 @@
-<!DOCTYPE html><html lang="en"><head><title>src/server/last_ditch</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="src/server/last_ditch"><meta name="groc-project-path" content="src/server/last_ditch.js"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/server/last_ditch.js</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="lastditch">LastDitch</h1></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><a href="http://mzl.la/1fRhnam">strict mode</a></p></div></div><div class="code"><div class="wrapper"><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+<!DOCTYPE html><html lang="en"><head><title>src/server/last_ditch</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="src/server/last_ditch"><meta name="groc-project-path" content="src/server/last_ditch.js"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/server/last_ditch.js</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="lastditch">LastDitch</h1>
+
+<p>The class that makes it all happen.</p></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><a href="http://mzl.la/1fRhnam">strict mode</a></p></div></div><div class="code"><div class="wrapper"><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">winston</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;winston&#39;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">Twilio</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-messaging&#39;</span><span class="p">).</span><span class="nx">Twilio</span><span class="p">;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>constructor</code> has no required parameters.</p></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">LastDitch</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+<span class="kd">var</span> <span class="nx">Twilio</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-messaging&#39;</span><span class="p">).</span><span class="nx">Twilio</span><span class="p">;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>constructor</code> has no required parameters. Optional parameters:</p>
+
+<ul>
+<li><code>appName</code> - the name of the app, used when sending text messages
+(can set this with APP_NAME environment variable)</li>
+<li><code>crashLog</code> - the file path of the crash log file (can use CRASH_LOG environment
+variable)</li>
+<li><code>development</code> - if set to true, SMS messages will not be sent. If not set manally, is
+to true if 'NODE_ENV' is 'development'</li>
+</ul></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">LastDitch</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">_</span><span class="p">.</span><span class="nx">bindAll</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
 
   <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
@@ -17,25 +28,11 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">development</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;development&#39;</span><span class="p">;</span>
   <span class="p">}</span>
 
-  <span class="k">this</span><span class="p">.</span><span class="nx">sending</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">twilio</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Twilio</span><span class="p">();</span>
-
-  <span class="k">this</span><span class="p">.</span><span class="nx">setGracefulWorker</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">gracefulWorker</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">LastDitch</span><span class="p">;</span>
-
-<span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">setGracefulWorker</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">gracefulWorker</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">_this</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
-
-  <span class="k">if</span> <span class="p">(</span><span class="nx">gracefulWorker</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">gracefulWorker</span><span class="p">.</span><span class="nx">addCheck</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="nx">_this</span><span class="p">.</span><span class="nx">sending</span> <span class="o">===</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="p">});</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">send</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">LastDitch</span><span class="p">;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>send</code> saves to disk and sends an SMS if not in development mode. Special support for
+<code>options.url</code> as the URL we were attempting to return when the crash happened.</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">send</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">stack</span> <span class="o">=</span> <span class="nx">err</span> <span class="o">?</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
   <span class="nx">stack</span> <span class="o">=</span> <span class="nx">stack</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">cwd</span><span class="p">()).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
 
@@ -45,9 +42,9 @@
     <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;crashed: &#39;</span> <span class="o">+</span> <span class="nx">stack</span><span class="p">,</span>
     <span class="nx">level</span><span class="o">:</span> <span class="s1">&#39;error&#39;</span>
   <span class="p">};</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">req</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">entry</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
-    <span class="nx">entry</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;crashed handling &#39;</span> <span class="o">+</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">stack</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">entry</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+    <span class="nx">entry</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;crashed handling &#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">stack</span><span class="p">;</span>
   <span class="p">}</span>
 
   <span class="nx">fs</span><span class="p">.</span><span class="nx">appendFileSync</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">crashLog</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">entry</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;\n&#39;</span><span class="p">);</span>
@@ -57,10 +54,8 @@
   <span class="k">else</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">sendSMS</span><span class="p">(</span><span class="nx">entry</span><span class="p">,</span> <span class="nx">cb</span><span class="p">);</span>
   <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sendSMS</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">entry</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">_this</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>sendSMS</code> takes a log entry object and constructs an SMS from it, then sends that
+via Twilio.</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sendSMS</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">entry</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">sms</span> <span class="o">=</span> <span class="p">{</span>
     <span class="nx">to</span><span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NOTIFY_SMS_TO</span><span class="p">,</span>
     <span class="nx">from</span><span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NOTIFY_SMS_FROM</span><span class="p">,</span>
@@ -80,11 +75,10 @@
   <span class="nx">sms</span><span class="p">.</span><span class="nx">body</span> <span class="o">+=</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">stack</span><span class="p">;</span>
   <span class="nx">sms</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">twilio</span><span class="p">.</span><span class="nx">truncateForSMS</span><span class="p">(</span><span class="nx">sms</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
 
-  <span class="k">this</span><span class="p">.</span><span class="nx">sending</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
   <span class="nx">winston</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Sending SMS message with crash information...&#39;</span><span class="p">);</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">twilio</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">sms</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">winston</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Done sending SMS&#39;</span><span class="p">);</span>
-    <span class="nx">_this</span><span class="p">.</span><span class="nx">sending</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
     <span class="k">if</span> <span class="p">(</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
       <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
     <span class="p">}</span>

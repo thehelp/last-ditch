@@ -1,5 +1,5 @@
 // # LastDitch
-//
+// The class that makes it all happen.
 
 // [strict mode](http://mzl.la/1fRhnam)
 'use strict';
@@ -11,7 +11,17 @@ var winston = require('winston');
 
 var Twilio = require('thehelp-messaging').Twilio;
 
-// `constructor` has no required parameters.
+/*
+`constructor` has no required parameters. Optional parameters:
+
++ `appName` - the name of the app, used when sending text messages
+(can set this with APP_NAME environment variable)
++ `crashLog` - the file path of the crash log file (can use CRASH_LOG environment
+variable)
++ `development` - if set to true, SMS messages will not be sent. If not set manally, is
+to true if 'NODE_ENV' is 'development'
+
+*/
 function LastDitch(options) {
   _.bindAll(this);
 
@@ -29,8 +39,9 @@ function LastDitch(options) {
 
 module.exports = LastDitch;
 
-
-LastDitch.prototype.send = function(err, req, cb) {
+// `send` saves to disk and sends an SMS if not in development mode. Special support for
+// `options.url` as the URL we were attempting to return when the crash happened.
+LastDitch.prototype.send = function(err, options, cb) {
   var stack = err ? err.stack : '';
   stack = stack.split(process.cwd()).join('');
 
@@ -40,9 +51,9 @@ LastDitch.prototype.send = function(err, req, cb) {
     message: 'crashed: ' + stack,
     level: 'error'
   };
-  if (req && req.url) {
-    entry.url = req.url;
-    entry.message = 'crashed handling ' + req.url + ': ' + entry.stack;
+  if (options && options.url) {
+    entry.url = options.url;
+    entry.message = 'crashed handling ' + options.url + ': ' + entry.stack;
   }
 
   fs.appendFileSync(this.crashLog, JSON.stringify(entry) + '\n');
@@ -54,6 +65,8 @@ LastDitch.prototype.send = function(err, req, cb) {
   }
 };
 
+// `sendSMS` takes a log entry object and constructs an SMS from it, then sends that
+// via Twilio.
 LastDitch.prototype.sendSMS = function(entry, cb) {
   var sms = {
     to: process.env.NOTIFY_SMS_TO,
