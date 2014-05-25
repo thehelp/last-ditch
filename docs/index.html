@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">README.md</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="thehelp-last-ditch">thehelp-last-ditch</h1>
 
-<p>This project helps your processes communicate that they are about to die by writing to
-a less-fallible log than winston's file transport and sending an SMS message.</p>
+<p>This project helps your processes communicate that they are about to die by writing to a less-fallible log than winston's file transport and sending an SMS message.</p>
 
 <h2 id="setup">Setup</h2>
 
@@ -17,7 +16,7 @@ a less-fallible log than winston's file transport and sending an SMS message.</p
 <p>These are optional:</p>
 
 <pre><code>"APP_NAME": "TestApp", // the name of your app for text messages
-"CRASH_LOG": "logs/crash.og", // Where last ditch logs will be appended
+"CRASH_LOG": "logs/crash.log", // Where last ditch logs will be appended
 "NODE_ENV": "development", // SMS messages will be sent if anything other than 'development'
 </code></pre>
 
@@ -68,6 +67,13 @@ instance.send(err, null, function() {
 </code></pre>
 
 <h2 id="history">History</h2>
+
+<h3 id="021-2014-05-25">0.2.1 (2014-05-25)</h3>
+
+<ul>
+<li>Update minor version: <code>async</code></li>
+<li>Update dev dependencies</li>
+</ul>
 
 <h3 id="020-2014-04-28">0.2.0 (2014-04-28)</h3>
 

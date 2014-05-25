@@ -75,6 +75,11 @@ grunt
 
 ## History
 
+### 0.2.1 (2014-05-25)
+
+* Update minor version: `async`
+* Update dev dependencies
+
 ### 0.2.0 (2014-04-28)
 
 * Removing direct support for `GracefulWorker` and keeping track of whether we're actively sending to Twilio; now expect users to rely on the callback.
