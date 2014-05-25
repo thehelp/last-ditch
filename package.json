@@ -16,8 +16,8 @@
     "blanket": "git+ssh://git@github.com:scottnonnenberg/blanket#v1.1.6",
     "grunt": "0.4.5",
     "thehelp-core": "1.5.2",
-    "thehelp-project": "2.5.0",
     "thehelp-messaging": "0.1.3",
+    "thehelp-project": "2.5.0",
     "thehelp-test": "2.0.8"
   },
 
