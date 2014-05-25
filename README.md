@@ -1,7 +1,6 @@
 # thehelp-last-ditch
 
-This project helps your processes communicate that they are about to die by writing to
-a less-fallible log than winston's file transport and sending an SMS message.
+This project helps your processes communicate that they are about to die by writing to a less-fallible log than winston's file transport and sending an SMS message.
 
 ## Setup
 
@@ -19,7 +18,7 @@ These are optional:
 
 ```
 "APP_NAME": "TestApp", // the name of your app for text messages
-"CRASH_LOG": "logs/crash.og", // Where last ditch logs will be appended
+"CRASH_LOG": "logs/crash.log", // Where last ditch logs will be appended
 "NODE_ENV": "development", // SMS messages will be sent if anything other than 'development'
 ```
 
@@ -64,11 +63,15 @@ instance.send(err, null, function() {
 
 Run unit and integration tests like this:
 
-    grunt test
+```
+grunt test
+```
 
 Tests, static analysis, documentation generation and more are all run by default:
 
-    grunt
+```
+grunt
+```
 
 ## History
 
