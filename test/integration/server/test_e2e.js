@@ -15,7 +15,7 @@ describe('thehelp-last-ditch', function() {
 
   it('adds entry to logs/crash.logs', function(done) {
     fs.unlink('logs/crash.log', function() {
-      var child = fork('test/start.js', { silent: true });
+      var child = fork('test/start.js', {silent: true});
 
       child.on('exit', function(code) {
         expect(code).not.to.equal(0);
