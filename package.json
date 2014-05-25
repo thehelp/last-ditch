@@ -13,12 +13,12 @@
     "thehelp-messaging": "0.1.x"
   },
   "devDependencies": {
-    "grunt": "0.4.x",
-    "thehelp-core": "git+ssh://git@infra:thehelp-core#v1.4.0",
-    "thehelp-project": "git+ssh://git@infra:thehelp-project#v2.4.4",
-    "thehelp-messaging": "git+ssh://git@infra:thehelp-messaging#v0.1.2",
-    "thehelp-test": "git+ssh://git@infra:thehelp-test#v2.0.6",
-    "blanket": "git+ssh://git@github.com:scottnonnenberg/blanket#v1.1.6"
+    "blanket": "git+ssh://git@github.com:scottnonnenberg/blanket#v1.1.6",
+    "grunt": "0.4.5",
+    "thehelp-core": "1.5.2",
+    "thehelp-project": "2.5.0",
+    "thehelp-messaging": "0.1.3",
+    "thehelp-test": "2.0.8"
   },
 
   "scripts": {
