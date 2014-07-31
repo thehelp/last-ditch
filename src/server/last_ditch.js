@@ -34,6 +34,7 @@ function LastDitch(options) {
     this.development = process.env.NODE_ENV === 'development';
   }
 
+  this.fs = fs;
   this.twilio = new Twilio();
 }
 
@@ -56,7 +57,13 @@ LastDitch.prototype.send = function(err, options, cb) {
     entry.message = 'crashed handling ' + options.url + ': ' + entry.stack;
   }
 
-  fs.appendFileSync(this.crashLog, JSON.stringify(entry) + '\n');
+  try {
+    this.fs.appendFileSync(this.crashLog, JSON.stringify(entry) + '\n');
+  }
+  catch (err) {
+    winston.error('Error saving crash data into last-ditch log! ' + err.stack);
+  }
+
   if (this.development) {
     process.nextTick(cb);
   }
@@ -88,11 +95,27 @@ LastDitch.prototype.sendSMS = function(entry, cb) {
   sms.body = this.twilio.truncateForSMS(sms.body);
 
   winston.info('Sending SMS message with crash information...');
-  this.twilio.send(sms, function(err) {
-    winston.info('Done sending SMS');
 
+  var finish = _.once(function(err) {
     if (cb) {
       cb(err);
     }
   });
+
+  this.twilio.send(sms, function(err) {
+    if (err) {
+      winston.error('SMS was not successfully sent: ' + err.stack);
+    }
+    else {
+      winston.info('Done sending SMS');
+    }
+
+    finish(err);
+  });
+
+  // guarantee callback in 2 seconds, even if twilio never returns
+  setTimeout(function() {
+    winston.warn('Twilio didn\'t return fast enough; forcing return');
+    finish();
+  }, 2000);
 };
