@@ -13,7 +13,6 @@ describe('thehelp-last-ditch', function() {
   });
 
   it('has LastDitch property', function() {
-    /*jshint -W030 */
     expect(index).to.have.property('LastDitch').that.exist;
   });
 
