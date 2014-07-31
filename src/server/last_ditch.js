@@ -5,6 +5,7 @@
 'use strict';
 
 var fs = require('fs');
+var os = require('os');
 
 var _ = require('lodash');
 var winston = require('winston');
@@ -78,7 +79,7 @@ LastDitch.prototype.sendSMS = function(entry, cb) {
   var sms = {
     to: process.env.NOTIFY_SMS_TO,
     from: process.env.NOTIFY_SMS_FROM,
-    body: this.appName + ' '
+    body: this.appName + ' on ' + os.hostname() + ' '
   };
 
   if (!sms.to || !sms.from) {
