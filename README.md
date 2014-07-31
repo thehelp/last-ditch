@@ -75,6 +75,10 @@ grunt
 
 ## History
 
+### 0.3.1 (2014-07-31)
+
+* Include machine hostname in text message
+
 ### 0.3.0 (2014-07-31)
 
 * Guaranteed callback if we can't append to the crash log
