@@ -75,6 +75,12 @@ grunt
 
 ## History
 
+### 0.3.0 (2014-07-31)
+
+* Guaranteed callback if we can't append to the crash log
+* Guaranteed callback if the `twilio.send` call never returns, or takes longer than 2 seconds
+* Update dev dependencies
+
 ### 0.2.2 (2014-05-27)
 
 * Pare down what's in the npm package
