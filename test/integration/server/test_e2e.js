@@ -6,7 +6,7 @@ var fork = require('child_process').fork;
 var path = require('path');
 
 var test = require('thehelp-test');
-var expect = test.core.expect;
+var expect = test.expect;
 
 var index = require('../../../src/server/index');
 var LastDitch = index.LastDitch;

@@ -3,7 +3,7 @@
 
 var test = require('thehelp-test');
 var index = require('../../../src/server/index');
-var expect = test.core.expect;
+var expect = test.expect;
 
 describe('thehelp-last-ditch', function() {
 

@@ -4,7 +4,7 @@
 var test = require('thehelp-test');
 var LastDitch = require('../../../src/server/last_ditch');
 var sinon = test.sinon;
-var expect = test.core.expect;
+var expect = test.expect;
 
 describe('LastDitch', function() {
   var lastDitch;
