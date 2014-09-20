@@ -19,7 +19,7 @@ module.exports.LastDitch = LastDitch;
 // `setupTopLevelHandler` makes it very easy to set up a top-level exception handler.
 // Set `options.lastDitch` to provide your own `LastDitch` instance, or really any other
 // method you'd like called.
-module.exports.setupTopLevelHandler = function(options) {
+module.exports.setupTopLevelHandler = function setupTopLevelHandler(options) {
   options = options || {};
   options.lastDitch = options.lastDitch || singleton.send;
 

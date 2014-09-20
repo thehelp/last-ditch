@@ -43,7 +43,7 @@ module.exports = LastDitch;
 
 // `send` saves to disk and sends an SMS if not in development mode. Special support for
 // `options.url` as the URL we were attempting to return when the crash happened.
-LastDitch.prototype.send = function(err, options, cb) {
+LastDitch.prototype.send = function send(err, options, cb) {
   var stack = err ? err.stack : '';
   stack = stack.split(process.cwd()).join('');
 
@@ -75,7 +75,7 @@ LastDitch.prototype.send = function(err, options, cb) {
 
 // `sendSMS` takes a log entry object and constructs an SMS from it, then sends that
 // via Twilio.
-LastDitch.prototype.sendSMS = function(entry, cb) {
+LastDitch.prototype.sendSMS = function sendSMS(entry, cb) {
   var sms = {
     to: process.env.NOTIFY_SMS_TO,
     from: process.env.NOTIFY_SMS_FROM,
