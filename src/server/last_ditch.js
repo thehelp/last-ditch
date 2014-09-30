@@ -7,7 +7,6 @@
 var fs = require('fs');
 var os = require('os');
 
-var _ = require('lodash');
 var winston = require('winston');
 
 var Twilio = require('thehelp-messaging').Twilio;
@@ -21,22 +20,27 @@ var Twilio = require('thehelp-messaging').Twilio;
 variable)
 + `development` - if set to true, SMS messages will not be sent. If not set manally, is
 to true if 'NODE_ENV' is 'development'
++ `log` - if you'd like to use something other than `winston` for logging, supply an
+object with `error`, `info` and `warn` `function(string)` keys
 
 */
 function LastDitch(options) {
-  _.bindAll(this);
-
   options = options || {};
-  this.appName = options.appName || process.env.APP_NAME || 'DefaultApp';
-  this.crashLog = options.crashLog || process.env.CRASH_LOG || 'logs/crash.log';
+  this.appName = options.appName || process.env.THEHELP_APP_NAME || 'DefaultApp';
+  this.crashLog = options.crashLog || process.env.THEHELP_CRASH_LOG || 'logs/crash.log';
 
   this.development = options.development;
   if (typeof this.development === 'undefined') {
     this.development = process.env.NODE_ENV === 'development';
   }
 
+  this.log = options.log || winston;
+
   this.fs = fs;
   this.twilio = new Twilio();
+
+  this.send = this.send.bind(this);
+  this.sendSMS = this.sendSMS.bind(this);
 }
 
 module.exports = LastDitch;
@@ -62,7 +66,7 @@ LastDitch.prototype.send = function send(err, options, cb) {
     this.fs.appendFileSync(this.crashLog, JSON.stringify(entry) + '\n');
   }
   catch (err) {
-    winston.error('Error saving crash data into last-ditch log! ' + err.stack);
+    this.log.error('Error saving crash data into last-ditch log! ' + err.stack);
   }
 
   if (this.development) {
@@ -76,13 +80,14 @@ LastDitch.prototype.send = function send(err, options, cb) {
 // `sendSMS` takes a log entry object and constructs an SMS from it, then sends that
 // via Twilio.
 LastDitch.prototype.sendSMS = function sendSMS(entry, cb) {
+  var _this = this;
   var sms = {
-    to: process.env.NOTIFY_SMS_TO,
-    from: process.env.NOTIFY_SMS_FROM,
-    body: this.appName + ' on ' + os.hostname() + ' '
+    To: process.env.NOTIFY_SMS_TO,
+    From: process.env.NOTIFY_SMS_FROM,
+    Body: this.appName + ' on ' + os.hostname() + ' '
   };
 
-  if (!sms.to || !sms.from) {
+  if (!sms.To || !sms.From) {
     if (cb) {
       process.nextTick(cb);
     }
@@ -90,25 +95,32 @@ LastDitch.prototype.sendSMS = function sendSMS(entry, cb) {
   }
 
   if (entry.url) {
-    sms.body += entry.url + ': ';
+    sms.Body += entry.url + ': ';
   }
-  sms.body += entry.stack;
-  sms.body = this.twilio.truncateForSMS(sms.body);
+  if (entry.stack) {
+    sms.Body += entry.stack;
+  }
+  sms.Body = this.twilio.truncate(sms.Body);
 
-  winston.info('Sending SMS message with crash information...');
+  this.log.info('Sending SMS message with crash information...');
 
-  var finish = _.once(function(err) {
+  var called = false;
+  var finish = function(err) {
+    if (called) {
+      return;
+    }
+    called = true;
     if (cb) {
       cb(err);
     }
-  });
+  };
 
   this.twilio.send(sms, function(err) {
     if (err) {
-      winston.error('SMS was not successfully sent: ' + err.stack);
+      _this.log.error('SMS was not successfully sent: ' + err.stack);
     }
     else {
-      winston.info('Done sending SMS');
+      _this.log.info('Done sending SMS');
     }
 
     finish(err);
@@ -116,7 +128,7 @@ LastDitch.prototype.sendSMS = function sendSMS(entry, cb) {
 
   // guarantee callback in 2 seconds, even if twilio never returns
   setTimeout(function() {
-    winston.warn('Twilio didn\'t return fast enough; forcing return');
+    _this.log.warn('Twilio didn\'t return fast enough; forcing return');
     finish();
   }, 2000);
 };

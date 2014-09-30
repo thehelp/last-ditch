@@ -8,7 +8,6 @@ var expect = test.expect;
 describe('thehelp-last-ditch', function() {
 
   it('works!', function() {
-    /*jshint -W030 */
     expect(index).to.exist;
   });
 
