@@ -4,7 +4,6 @@
 
 'use strict';
 
-var winston = require('winston');
 var LastDitch = require('./last_ditch.js');
 
 var singleton = new LastDitch();
@@ -25,7 +24,6 @@ module.exports.setupTopLevelHandler = function setupTopLevelHandler(options) {
 
   process.on('uncaughtException', function(err) {
     options.go(err, function() {
-      winston.info('Error saved! Exiting...');
       process.exit(1);
     });
   });
