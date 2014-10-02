@@ -115,12 +115,12 @@ describe('LastDitch', function() {
     });
 
     it('immediately calls callback if To is not defined', function(done) {
-      var old = process.env.NOTIFY_SMS_TO;
-      delete process.env.NOTIFY_SMS_TO;
+      var old = process.env.THEHELP_LD_SMS_TO;
+      delete process.env.THEHELP_LD_SMS_TO;
 
       lastDitch.sendSMS({}, {}, function() {
         expect(arguments).to.have.length(0);
-        process.env.NOTIFY_SMS_TO = old;
+        process.env.THEHELP_LD_SMS_TO = old;
 
         expect(lastDitch).to.have.deep.property('sms.send.callCount', 0);
 
@@ -129,12 +129,12 @@ describe('LastDitch', function() {
     });
 
     it('immediately calls callback if From is not defined', function(done) {
-      var old = process.env.NOTIFY_SMS_FROM;
-      delete process.env.NOTIFY_SMS_FROM;
+      var old = process.env.THEHELP_LD_SMS_FROM;
+      delete process.env.THEHELP_LD_SMS_FROM;
 
       lastDitch.sendSMS({}, {}, function() {
         expect(arguments).to.have.length(0);
-        process.env.NOTIFY_SMS_FROM = old;
+        process.env.THEHELP_LD_SMS_FROM = old;
 
         expect(lastDitch).to.have.deep.property('sms.send.callCount', 0);
 
@@ -170,12 +170,12 @@ describe('LastDitch', function() {
     });
 
     it('immediately calls callback if To is not defined', function(done) {
-      var old = process.env.NOTIFY_EMAIL_TO;
-      delete process.env.NOTIFY_EMAIL_TO;
+      var old = process.env.THEHELP_LD_EMAIL_TO;
+      delete process.env.THEHELP_LD_EMAIL_TO;
 
       lastDitch.sendEmail({}, {}, function() {
         expect(arguments).to.have.length(0);
-        process.env.NOTIFY_EMAIL_TO = old;
+        process.env.THEHELP_LD_EMAIL_TO = old;
 
         expect(lastDitch).to.have.deep.property('email.send.callCount', 0);
 
@@ -184,12 +184,12 @@ describe('LastDitch', function() {
     });
 
     it('immediately calls callback if From is not defined', function(done) {
-      var old = process.env.NOTIFY_EMAIL_FROM;
-      delete process.env.NOTIFY_EMAIL_FROM;
+      var old = process.env.THEHELP_LD_EMAIL_FROM;
+      delete process.env.THEHELP_LD_EMAIL_FROM;
 
       lastDitch.sendEmail({}, {}, function() {
         expect(arguments).to.have.length(0);
-        process.env.NOTIFY_EMAIL_FROM = old;
+        process.env.THEHELP_LD_EMAIL_FROM = old;
 
         expect(lastDitch).to.have.deep.property('email.send.callCount', 0);
 

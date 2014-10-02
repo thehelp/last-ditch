@@ -170,8 +170,8 @@ LastDitch.prototype.sendSMS = function sendSMS(err, options, cb) {
   }
 
   var sms = {
-    To: process.env.NOTIFY_SMS_TO,
-    From: process.env.NOTIFY_SMS_FROM,
+    To: process.env.THEHELP_LD_SMS_TO,
+    From: process.env.THEHELP_LD_SMS_FROM,
     Body: this.appName + ' on ' + os.hostname() + ': ' + err.message + '\n' +
       core.breadcrumbs._prepareStack(err)
   };
@@ -212,8 +212,8 @@ LastDitch.prototype.sendEmail = function sendEmail(err, options, cb) {
   }
 
   var email = {
-    to: process.env.NOTIFY_EMAIL_TO,
-    from: process.env.NOTIFY_EMAIL_FROM,
+    to: process.env.THEHELP_LD_EMAIL_TO,
+    from: process.env.THEHELP_LD_EMAIL_FROM,
     subject: this.appName + ' crashed on ' + os.hostname(),
     text: 'app: ' + this.appName + '\n' +
       'host: ' + os.hostname()
