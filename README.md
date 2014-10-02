@@ -37,7 +37,7 @@ lastDitch(err);
 
 Both of these will log to `crash.log` in the current working directory. Use the `THEHELP_CRASH_LOG` to set the file path.
 
-_Note: When you set the top-level handler, it will __exit the process__ once it has logged the error._
+_Note: When you set the top-level handler, it will **exit the process** once it has logged the error._
 
 ### Messaging
 
