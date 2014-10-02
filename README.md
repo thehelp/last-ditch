@@ -1,109 +1,102 @@
+[![Build Status](https://travis-ci.org/thehelp/last-ditch.svg?branch=master)](https://travis-ci.org/last-ditch/messaging)
+
 # thehelp-last-ditch
 
-This project helps your processes communicate that they are about to die by writing to a less-fallible log than winston's file transport and sending an SMS message.
+Make sure you know when your Node.js process crashes: output the error to stderr, append it to a file, send it via email, and send it via SMS. Cover all your bases in case of loss of filesystem access or internet connectivity.
+
+## Features
+
+* Super-easy default setup: logging of error info to stderr and a synchronous append to a log file.
+* Just a few more steps to sending SMS and Email via [`thehelp-messaging`](https://github.com/thehelp/messaging)
 
 ## Setup
 
-These environment variables are required
+First install the project as a dependency:
 
-```
-"NOTIFY_SMS_TO": "a normalized phone number (like +18005551212) to receive SMS reports",
-"NOTIFY_SMS_FROM": "a normalized, valid Twilio from number (part of your Twilio account)"
-
-"TWILIO_KEY": "'Account SID' on your account detail page",
-"TWILIO_TOKEN": "your 'Auth Token' on that same page",
+```bash
+npm install thehelp-last-ditch --save
 ```
 
-These are optional:
+### Usage
 
-```
-"APP_NAME": "TestApp", // the name of your app for text messages
-"CRASH_LOG": "logs/crash.log", // Where last ditch logs will be appended
-"NODE_ENV": "development", // SMS messages will be sent if anything other than 'development'
-```
+Get going quick:
 
-## Usage
-
-You can very quickly set up a handler for uncaught exceptions at the process level:
-
-```
+```javascript
 var lastDitch = require('thehelp-last-ditch');
 lastDitch.setupTopLevelHandler();
+throw new Error('top-level handler test');
 ```
 
-However, if you're using domains or some other error-handling system, you'll want to call lastDitch directly:
+or:
 
-```
-var info = {
-  url: '/account'
-};
-
-domain.on('error', function(err) {
-  lastDitch(err, info, function() {
-    // message sent; shut down process
-  })
-})
+```javascript
+var lastDitch = require('thehelp-last-ditch');
+var err = new Error('just testing things out!');
+lastDitch(err);
 ```
 
-Lastly, you can create an instance of LastDitch yourself, supplying configuration parameters programmatically:
+Both of these will log to `crash.log` in the current working directory. Use the `THEHELP_CRASH_LOG` to set the file path.
 
+_Note: When you set the top-level handler, it will __exit the process__ once it has logged the error._
+
+### Messaging
+
+But you probably want to go a little further, send SMS and email. This requires a bit of configuration. You can do it via parameters, but environment variables are the easiest:
+
+
+```json
+{
+  "THEHELP_APP_NAME": "YourAppName (so you know what app crashed)",
+
+  "THEHELP_LD_SMS_TO": "a normalized phone number (like +18005551212) to receive SMS reports",
+  "THEHELP_LD_SMS_FROM": "a normalized, valid Twilio from number (part of your Twilio account)"
+
+  "THEHELP_LD_EMAIL_TO": "email address for your crash reports",
+  "THEHELP_LD_EMAIL_FROM": "who your email crash reports will be from",
+
+  "THEHELP_SENDGRID_USERNAME": "username",
+  "THEHELP_SENDGRID_PASSWORD": "password",
+
+  "THEHELP_TWILIO_KEY": "your AccountSID",
+  "THEHELP_TWILIO_TOKEN": "your AuthToken",
+}
 ```
-var instance = new lastDitch.LastDitch({
-  appName: 'MyApp',
-  crashLog: 'logs/worker1.log',
-  development: true
+
+Now, with this setup in place, let's set up your top-level handler again:
+
+```javascript
+var ld = require('thehelp-last-ditch');
+
+var lastDitch = new ld.LastDitch({
+  targets: ld.LastDitch.ALL_TARGETS
 });
 
-instance.send(err, null, function() {
-  process.exit();
+ld.setupTopLevelHandler({
+  go: lastDitch.go
 });
+
+throw new Error('messaging test');
 ```
 
-## Development
+_Note: No SMS or email will be sent if `process.env.NODE_ENV === 'development'`_
 
-Run unit and integration tests like this:
+## Detailed Documentation
 
-```
-grunt test
-```
+Detailed docs be found at this project's GitHub Pages, thanks to `groc`: <http://thehelp.github.io/messaging>
 
-Tests, static analysis, documentation generation and more are all run by default:
 
-```
-grunt
-```
+## Contributing changes
 
-## History
+It's a pretty involved project. You'll need Sendgrid and Twilio accounts, and all the environment variables mentioned above. The unit tests are quick and easy, but the manual test (not part of the `grunt` 'default' task) sends SMS and Email.
 
-### 0.3.1 (2014-07-31)
+When you have some changes ready, please include:
 
-* Include machine hostname in text message
+* Justification - why is this change worthwhile? Link to issues, use code samples, etc.
+* Documentation changes for your code updates. Be sure to check the groc-generated HTML with `grunt doc`
+* A description of how you tested the change. Don't forget about the very-useful `npm link` command :0)
 
-### 0.3.0 (2014-07-31)
+I may ask you to use a `git rebase` to ensure that your commits are not interleaved with commits already in the history. And of course, make sure `grunt` completes successfully (take a look at the requirements for [`thehelp-project`](https://github.com/thehelp/project)). :0)
 
-* Guaranteed callback if we can't append to the crash log
-* Guaranteed callback if the `twilio.send` call never returns, or takes longer than 2 seconds
-* Update dev dependencies
-
-### 0.2.2 (2014-05-27)
-
-* Pare down what's in the npm package
-
-### 0.2.1 (2014-05-25)
-
-* Update minor version: `async`
-* Update dev dependencies
-
-### 0.2.0 (2014-04-28)
-
-* Removing direct support for `GracefulWorker` and keeping track of whether we're actively sending to Twilio; now expect users to rely on the callback.
-* Additional documentation
-
-### 0.1.0 (2014-04-25)
-
-* Default send function returned on `require()` of this module
-* `LastDitch` class available for direct use
-* `setupTopLevelHandler()` to make it easy to set up an 'uncaughtException' handler
 
 ## License
 
