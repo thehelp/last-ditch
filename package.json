@@ -23,9 +23,29 @@
     }
   },
 
+  "description": "Make sure you know when your Node.js process crashes: output the error to stderr, append it to a file, send it via email, and send it via SMS. Cover all your bases in case of loss of filesystem access or internet connectivity.",
+  "keywords": [
+    "crash",
+    "error",
+    "uncaught",
+    "exception",
+    "process",
+    "email",
+    "sendgrid",
+    "sms",
+    "twilio",
+    "send",
+    "log",
+    "logging"
+  ],
+
   "author": "Scott Nonnenberg",
+  "license": "MIT",
+
+  "homepage": "https://github.com/thehelp/last-ditch",
   "repository": {
     "type": "git",
-    "url": "git@infra:thehelp-last-ditch"
-  }
+    "url": "git@github.com:thehelp/last-ditch.git"
+  },
+  "bugs": "https://github.com/thehelp/last-ditch/issues"
 }
