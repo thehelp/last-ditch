@@ -4,9 +4,10 @@
   "main": "src/server/index.js",
 
   "dependencies": {
-    "winston": "0.7.x",
-    "thehelp-messaging": "1.0.0",
-    "thehelp-core": "2.0.0"
+    "async": "0.9.x",
+    "thehelp-core": "2.x",
+    "thehelp-messaging": "1.x",
+    "winston": "0.7.x"
   },
   "devDependencies": {
     "blanket": "1.1.6",
@@ -15,7 +16,7 @@
     "thehelp-test": "3.1.0"
   },
 
-  "scripts": {
+  "config": {
     "blanket": {
       "data-cover-only": "src",
       "data-cover-never": "['lib/','node_modules/','test/','src/client']"
