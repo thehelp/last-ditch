@@ -5,4 +5,4 @@ install:
   - npm install
   - npm install -g grunt-cli
   - sudo easy_install Pygments
-  - 'echo "{\"THEHELP_LD_SMS_TO\": \"test\",\"THEHELP_LD_SMS_FROM\": \"test\",\"THEHELP_LD_EMAIL_TO\": \"test\",\"THEHELP_LD_EMAIL_TO\": \"test\"}" > env.json'
+  - 'echo "{\"THEHELP_LD_SMS_TO\": \"test\",\"THEHELP_LD_SMS_FROM\": \"test\",\"THEHELP_LD_EMAIL_TO\": \"test\",\"THEHELP_LD_EMAIL_FROM\": \"test\"}" > env.json'
