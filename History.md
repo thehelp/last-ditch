@@ -1,6 +1,14 @@
 ## 1.0.0 (2014-10-02)
 
-* Support for `thehelp-messaging` 1.0.0
+Breaking:
+
+* Key method on `LastDitch` object is now `go()` instead of `send()`
+* Default location for crash.log is the current working directory (instead of inside ./logs/)
+* Environment variables changed; now all prefixed with 'THEHELP_'
+
+Other:
+
+* Now use `thehelp-messaging` 1.0.0
 * Instead of always appending to log file and sending SMS, move to configurable targets: `stderr`, `crashLog`, `sendSMS`, `sendEmail`. `stderr` and `crashLog` are on by default.
 * Now support calling root method (`LastDitch.go`) with two arguments or just one argument and no callback.
 * Further bullet-proofing: handle null `err`, missing targets, etc.
