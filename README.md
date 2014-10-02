@@ -49,7 +49,7 @@ But you probably want to go a little further, send SMS and email. This requires 
   "THEHELP_APP_NAME": "YourAppName (so you know what app crashed)",
 
   "THEHELP_LD_SMS_TO": "a normalized phone number (like +18005551212) to receive SMS reports",
-  "THEHELP_LD_SMS_FROM": "a normalized, valid Twilio from number (part of your Twilio account)"
+  "THEHELP_LD_SMS_FROM": "a normalized, valid Twilio from number (part of your Twilio account)",
 
   "THEHELP_LD_EMAIL_TO": "email address for your crash reports",
   "THEHELP_LD_EMAIL_FROM": "who your email crash reports will be from",
@@ -82,7 +82,7 @@ _Note: No SMS or email will be sent if `process.env.NODE_ENV === 'development'`_
 
 ## Detailed Documentation
 
-Detailed docs be found at this project's GitHub Pages, thanks to `groc`: <http://thehelp.github.io/messaging>
+Detailed docs be found at this project's GitHub Pages, thanks to `groc`: <http://thehelp.github.io/last-ditch>
 
 
 ## Contributing changes
