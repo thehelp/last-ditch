@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/thehelp/last-ditch.svg?branch=master)](https://travis-ci.org/last-ditch/messaging)
+[![Build Status](https://travis-ci.org/thehelp/last-ditch.svg?branch=master)](https://travis-ci.org/thehelp/last-ditch)
 
 # thehelp-last-ditch
 
