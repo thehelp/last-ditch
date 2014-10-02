@@ -95,6 +95,15 @@ describe('LastDitch', function() {
       };
     });
 
+    it('calls callback immediately if development set to true', function(done) {
+      lastDitch.development = true;
+      lastDitch.sendSMS({}, {}, function() {
+        expect(lastDitch).to.have.deep.property('sms.send.callCount', 0);
+
+        done();
+      });
+    });
+
     it('calls callback with err if sms.send returns an error', function(done) {
       lastDitch.sendSMS({}, {}, function(err) {
         expect(lastDitch).to.have.deep.property('sms.send.callCount', 1);
@@ -139,6 +148,15 @@ describe('LastDitch', function() {
       lastDitch.email = {
         send: sinon.stub().yields(new Error('message'))
       };
+    });
+
+    it('calls callback immediately if development set to true', function(done) {
+      lastDitch.development = true;
+      lastDitch.sendEmail({}, {}, function() {
+        expect(lastDitch).to.have.deep.property('email.send.callCount', 0);
+
+        done();
+      });
     });
 
     it('calls callback with err if email.send returns an error', function(done) {

@@ -20,12 +20,14 @@ var Sendgrid = messaging.Sendgrid;
 
 + `appName` - the name of the app, used when sending text messages
 (can set this with THEHELP_APP_NAME environment variable)
-+ `development` - if set to true, SMS messages will not be sent. If not set manally, is
-to true if 'NODE_ENV' is 'development'
++ `development` - if set to true, neither email nor SMS messages be sent. If not set
+ manally, is set to true if `process.env.NODE_ENV === 'development'`
 + `log` - if you'd like to use something other than `winston` for logging, supply an
-object with `error`, `info` and `warn` `function(string)` keys
+object with `error`, `info` and `warn` keys (signature: `function(string)`)
 + `targets` - an array of the targets where you'd like error information to go. See
 `LastDitch.DEFAULT_TARGETS` and `LastDitch.ALL_TARGETS` below.
++ `timeout` - how long to wait for targets to return before calling `go()`'s provided
+callback
 
 These are specific to various targets:
 
@@ -162,6 +164,11 @@ me!_
 */
 LastDitch.prototype.sendSMS = function sendSMS(err, options, cb) {
   var _this = this;
+
+  if (this.development) {
+    return cb();
+  }
+
   var sms = {
     To: process.env.NOTIFY_SMS_TO,
     From: process.env.NOTIFY_SMS_FROM,
@@ -199,6 +206,11 @@ me!_
 */
 LastDitch.prototype.sendEmail = function sendEmail(err, options, cb) {
   var _this = this;
+
+  if (this.development) {
+    return cb();
+  }
+
   var email = {
     to: process.env.NOTIFY_EMAIL_TO,
     from: process.env.NOTIFY_EMAIL_FROM,
