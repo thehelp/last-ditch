@@ -11,21 +11,20 @@ var singleton = new LastDitch();
 
 // The result of requiring this modules is a method that can be called directly with an
 // Error object.
-module.exports = singleton.send;
+module.exports = singleton.go;
 
 // Make the full class available as well as the singleton's `send` method
 module.exports.LastDitch = LastDitch;
 
 // `setupTopLevelHandler` makes it very easy to set up a top-level exception handler.
-// Set `options.lastDitch` to provide your own `LastDitch` instance, or really any other
-// method you'd like called.
+// Set `options.go` to provide your own `LastDitch` instance's `go()` method, or really
+// any other method you'd like called (of the signature `function(err, cb)`)
 module.exports.setupTopLevelHandler = function setupTopLevelHandler(options) {
   options = options || {};
-  options.lastDitch = options.lastDitch || singleton.send;
+  options.go = options.go || singleton.go;
 
   process.on('uncaughtException', function(err) {
-    winston.info('Uncaught exception! ' + err.stack);
-    options.lastDitch(err, null, function() {
+    options.go(err, function() {
       winston.info('Error saved! Exiting...');
       process.exit(1);
     });
