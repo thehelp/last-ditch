@@ -43,7 +43,7 @@ function LastDitch(options) {
   options = options || {};
   this.appName = options.appName || process.env.THEHELP_APP_NAME || 'DefaultApp';
   this.crashLogFile =
-    options.crashLog || process.env.THEHELP_CRASH_LOG || 'logs/crash.log';
+    options.crashLog || process.env.THEHELP_CRASH_LOG || 'crash.log';
 
   this.development = options.development;
   if (typeof this.development === 'undefined') {
@@ -135,7 +135,7 @@ LastDitch.prototype.stderr = function stderr(err, options, cb) {
 
 /*
 `crashLog` appends a JSON-formatted log entry to a file you specify
-(./logs/crash.log by default).
+(crash.log in process current working directory by default).
 
 _Note: Not fully reliable; if the machine is crashing because the machine is going
 down unexpectedly, the filesystem may no longer be available. Yes, I've run into this._

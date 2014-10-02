@@ -2,7 +2,6 @@
 'use strict';
 
 var fs = require('fs');
-var path = require('path');
 
 var test = require('thehelp-test');
 var expect = test.expect;
@@ -12,7 +11,7 @@ var LastDitch = require('../../../src/server/last_ditch');
 describe('complext end-to-end', function() {
 
   beforeEach(function(done) {
-    fs.unlink('logs/crash.log', done);
+    fs.unlink('crash.log', done);
   });
 
   it('adds to crash log, sends SMS, sends email and logs to stderr', function(done) {
@@ -35,7 +34,7 @@ describe('complext end-to-end', function() {
     go(err, options, function(err) {
       expect(err).not.to.exist;
 
-      var log = fs.readFileSync(path.join(__dirname, '../../../logs/crash.log'));
+      var log = fs.readFileSync('crash.log');
       log = JSON.parse(log);
 
       expect(log).to.have.property('level', 'error');
