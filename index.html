@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/thehelp/last-ditch"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/thehelp/last-ditch/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><p><a href="https://travis-ci.org/thehelp/last-ditch"><img src="https://travis-ci.org/thehelp/last-ditch.svg?branch=master" alt="Build Status" title="" /></a></p>
+
+<h1 id="thehelp-last-ditch">thehelp-last-ditch</h1>
+
+<p>Make sure you know when your Node.js process crashes: output the error to stderr, append it to a file, send it via email, and send it via SMS. Cover all your bases in case of loss of filesystem access or internet connectivity.</p>
+
+<h2 id="features">Features</h2>
+
+<ul>
+<li>Super-easy default setup: logging of error info to stderr and a synchronous append to a log file.</li>
+<li>Just a few more steps to sending SMS and Email via <a href="https://github.com/thehelp/messaging"><code>thehelp-messaging</code></a></li>
+</ul>
+
+<h2 id="setup">Setup</h2>
+
+<p>First install the project as a dependency:</p>
+
+<pre><code class="bash">npm install thehelp-last-ditch --save
+</code></pre>
+
+<h3 id="usage">Usage</h3>
+
+<p>Get going quick:</p>
+
+<pre><code class="javascript">var lastDitch = require('thehelp-last-ditch');
+lastDitch.setupTopLevelHandler();
+throw new Error('top-level handler test');
+</code></pre>
+
+<p>or:</p>
+
+<pre><code class="javascript">var lastDitch = require('thehelp-last-ditch');
+var err = new Error('just testing things out!');
+lastDitch(err);
+</code></pre>
+
+<p>Both of these will log to <code>crash.log</code> in the current working directory. Use the <code>THEHELP_CRASH_LOG</code> to set the file path.</p>
+
+<p><em>Note: When you set the top-level handler, it will <strong>exit the process</strong> once it has logged the error.</em></p>
+
+<h3 id="messaging">Messaging</h3>
+
+<p>But you probably want to go a little further, send SMS and email. This requires a bit of configuration. You can do it via parameters, but environment variables are the easiest:</p>
+
+<pre><code class="json">{
+  "THEHELP_APP_NAME": "YourAppName (so you know what app crashed)",
+
+  "THEHELP_LD_SMS_TO": "a normalized phone number (like +18005551212) to receive SMS reports",
+  "THEHELP_LD_SMS_FROM": "a normalized, valid Twilio from number (part of your Twilio account)",
+
+  "THEHELP_LD_EMAIL_TO": "email address for your crash reports",
+  "THEHELP_LD_EMAIL_FROM": "who your email crash reports will be from",
+
+  "THEHELP_SENDGRID_USERNAME": "username",
+  "THEHELP_SENDGRID_PASSWORD": "password",
+
+  "THEHELP_TWILIO_KEY": "your AccountSID",
+  "THEHELP_TWILIO_TOKEN": "your AuthToken",
+}
+</code></pre>
+
+<p>Now, with this setup in place, let's set up your top-level handler again:</p>
+
+<pre><code class="javascript">var ld = require('thehelp-last-ditch');
+
+var lastDitch = new ld.LastDitch({
+  targets: ld.LastDitch.ALL_TARGETS
+});
+
+ld.setupTopLevelHandler({
+  go: lastDitch.go
+});
+
+throw new Error('messaging test');
+</code></pre>
+
+<p><em>Note: No SMS or email will be sent if <code>process.env.NODE_ENV === 'development'</code></em></p>
+
+<h2 id="detailed-documentation">Detailed Documentation</h2>
+
+<p>Detailed docs be found at this project's GitHub Pages, thanks to <code>groc</code>: <a href="http://thehelp.github.io/last-ditch">http://thehelp.github.io/last-ditch</a></p>
+
+<h2 id="contributing-changes">Contributing changes</h2>
+
+<p>It's a pretty involved project. You'll need Sendgrid and Twilio accounts, and all the environment variables mentioned above. The unit tests are quick and easy, but the manual test (not part of the <code>grunt</code> 'default' task) sends SMS and Email.</p>
+
+<p>When you have some changes ready, please include:</p>
+
+<ul>
+<li>Justification - why is this change worthwhile? Link to issues, use code samples, etc.</li>
+<li>Documentation changes for your code updates. Be sure to check the groc-generated HTML with <code>grunt doc</code></li>
+<li>A description of how you tested the change. Don't forget about the very-useful <code>npm link</code> command :0)</li>
+</ul>
+
+<p>I may ask you to use a <code>git rebase</code> to ensure that your commits are not interleaved with commits already in the history. And of course, make sure <code>grunt</code> completes successfully (take a look at the requirements for <a href="https://github.com/thehelp/project"><code>thehelp-project</code></a>). :0)</p>
+
+<h2 id="license">License</h2>
+
+<p>(The MIT License)</p>
+
+<p>Copyright (c) 2013 Scott Nonnenberg &lt;scott@nonnenberg.com&gt;</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p></div></div></div></div></body></html>

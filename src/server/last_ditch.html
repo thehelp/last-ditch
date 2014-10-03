@@ -1,0 +1,251 @@
+<!DOCTYPE html><html lang="en"><head><title>src/server/last_ditch</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content="../../"><meta name="groc-document-path" content="src/server/last_ditch"><meta name="groc-project-path" content="src/server/last_ditch.js"><meta name="groc-github-url" content="https://github.com/thehelp/last-ditch"><link rel="stylesheet" type="text/css" media="all" href="../../assets/style.css"><script type="text/javascript" src="../../assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/thehelp/last-ditch/blob/master/src/server/last_ditch.js">src/server/last_ditch.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="lastditch">LastDitch</h1>
+
+<p>The class that makes it all happen.</p></div></div><div class="code"><div class="wrapper"><span class="s1">&#39;use strict&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">os</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;os&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">async</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;async&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">winston</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;winston&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">core</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-core&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">messaging</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-messaging&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Twilio</span> <span class="o">=</span> <span class="nx">messaging</span><span class="p">.</span><span class="nx">Twilio</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">Sendgrid</span> <span class="o">=</span> <span class="nx">messaging</span><span class="p">.</span><span class="nx">Sendgrid</span><span class="p">;</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>constructor</code> has no required parameters, but quite a few optional parameters:</p>
+
+<ul>
+<li><code>appName</code> - the name of the app, used when sending text messages
+(can set this with THEHELP<em>APP</em>NAME environment variable)</li>
+<li><code>development</code> - if set to true, neither email nor SMS messages be sent. If not set
+manally, is set to true if <code>process.env.NODE_ENV === 'development'</code></li>
+<li><code>log</code> - if you'd like to use something other than <code>winston</code> for logging, supply an
+object with <code>error</code>, <code>info</code> and <code>warn</code> keys (signature: <code>function(string)</code>)</li>
+<li><code>targets</code> - an array of the targets where you'd like error information to go. See
+<code>LastDitch.DEFAULT_TARGETS</code> and <code>LastDitch.ALL_TARGETS</code> below.</li>
+<li><code>timeout</code> - how long to wait for targets to return before calling <code>go()</code>'s provided
+callback</li>
+</ul>
+
+<p>These are specific to various targets:</p>
+
+<ul>
+<li><code>crashLog</code> - the file path of the crash log file (can use THEHELP<em>CRASH</em>LOG environment
+variable)</li>
+<li><code>sms</code> - object with <code>send()</code> and <code>truncate()</code> methods. See <code>sendSMS()</code> below.</li>
+<li><code>email</code> - object with <code>send()</code> method. See <code>sendEmail()</code> below.</li>
+</ul></div></div><div class="code"><div class="wrapper"><span class="kd">function</span> <span class="nx">LastDitch</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="cm">/*jshint maxcomplexity: 10 */</span>
+
+  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">appName</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">appName</span> <span class="o">||</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">THEHELP_APP_NAME</span> <span class="o">||</span> <span class="s1">&#39;DefaultApp&#39;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">crashLogFile</span> <span class="o">=</span>
+    <span class="nx">options</span><span class="p">.</span><span class="nx">crashLog</span> <span class="o">||</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">THEHELP_CRASH_LOG</span> <span class="o">||</span> <span class="s1">&#39;crash.log&#39;</span><span class="p">;</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">development</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">development</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="k">this</span><span class="p">.</span><span class="nx">development</span> <span class="o">===</span> <span class="s1">&#39;undefined&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">development</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;development&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">timeout</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">timeout</span> <span class="o">||</span> <span class="mi">2000</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">log</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">log</span> <span class="o">||</span> <span class="nx">winston</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">targets</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">targets</span> <span class="o">||</span> <span class="nx">LastDitch</span><span class="p">.</span><span class="nx">DEFAULT_TARGETS</span><span class="p">;</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">fs</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">;</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">_setupMessaging</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">_bindAll</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">LastDitch</span><span class="p">;</span>
+
+<span class="nx">LastDitch</span><span class="p">.</span><span class="nx">DEFAULT_TARGETS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;stderr&#39;</span><span class="p">,</span> <span class="s1">&#39;crashLog&#39;</span><span class="p">];</span>
+<span class="nx">LastDitch</span><span class="p">.</span><span class="nx">ALL_TARGETS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;stderr&#39;</span><span class="p">,</span> <span class="s1">&#39;crashLog&#39;</span><span class="p">,</span> <span class="s1">&#39;sendSMS&#39;</span><span class="p">,</span> <span class="s1">&#39;sendEmail&#39;</span><span class="p">];</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h1 id="commonly-used-methods">Commonly-used Methods</h1></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>go</code> processes the provided <code>err</code>, then farms it out to every method listed in
+<code>this.targets</code>.</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">go</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">go</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">_this</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">cb</span> <span class="o">=</span> <span class="nx">options</span><span class="p">;</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="p">{};</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+  <span class="kd">var</span> <span class="nx">useTarget</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">useTarget</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">fn</span> <span class="o">=</span> <span class="nx">_this</span><span class="p">[</span><span class="nx">target</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">next</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">_this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Could not find \&#39;&#39;</span> <span class="o">+</span> <span class="nx">target</span> <span class="o">+</span> <span class="s1">&#39;\&#39; target&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+  <span class="p">};</span>
+
+  <span class="kd">var</span> <span class="nx">called</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">callCbOnce</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">callCbOnce</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">called</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">called</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+
+  <span class="nx">async</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">targets</span><span class="p">,</span> <span class="nx">useTarget</span><span class="p">,</span> <span class="nx">callCbOnce</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>guarantee callback in 2 seconds, even if targets never return</p></div></div><div class="code"><div class="wrapper">  <span class="kd">var</span> <span class="nx">timeout</span> <span class="o">=</span> <span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">called</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">_this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s1">&#39;all targets didn\&#39;t return fast enough; forcing return&#39;</span><span class="p">);</span>
+      <span class="nx">callCbOnce</span><span class="p">();</span>
+    <span class="p">}</span>
+  <span class="p">},</span> <span class="k">this</span><span class="p">.</span><span class="nx">timeout</span><span class="p">);</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>this ensures that this timeout doesn't prevent the process from going down</p></div></div><div class="code"><div class="wrapper">  <span class="nx">timeout</span><span class="p">.</span><span class="nx">unref</span><span class="p">();</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h1 id="targets">Targets</h1></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>stderr</code> simply logs the error message out to stderr. The most reliable target.</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">stderr</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">stderr</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">urlSummary</span> <span class="o">=</span> <span class="s1">&#39;crash&#39;</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">urlSummary</span> <span class="o">+=</span> <span class="s1">&#39; handling &#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;LastDitch:&#39;</span><span class="p">,</span> <span class="nx">urlSummary</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
+  <span class="k">return</span> <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>crashLog</code> appends a JSON-formatted log entry to a file you specify
+(crash.log in process current working directory by default).</p>
+
+<p><em>Note: Not fully reliable; if the machine is crashing because the machine is going
+down unexpectedly, the filesystem may no longer be available. Yes, I've run into this.</em></p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">crashLog</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">crashLog</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_buildEntry</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fs</span><span class="p">.</span><span class="nx">appendFileSync</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">crashLogFile</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">entry</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">catch</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Error saving crash data into crash log! &#39;</span> <span class="o">+</span>
+      <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>sendSMS</code> sends an SMS built from the provided error (message first, then contents,
+then callstack). It's truncated first if your SMS provider has a <code>trunctate()</code> method.
+This is actually a very reliable method if your machine still has internet connectivity
+as your app goes down.</p>
+
+<p><em>Note: the <code>sms</code> object, defaulted to the <code>Twilio</code> class from <code>thehelp-messaging</code> must
+have a <code>send()</code> method which takes an object with capitalized keys. Blame Twilio, not
+me!</em></p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sendSMS</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">sendSMS</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">_this</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">development</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">cb</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="kd">var</span> <span class="nx">sms</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">To</span><span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">THEHELP_LD_SMS_TO</span><span class="p">,</span>
+    <span class="nx">From</span><span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">THEHELP_LD_SMS_FROM</span><span class="p">,</span>
+    <span class="nx">Body</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">appName</span> <span class="o">+</span> <span class="s1">&#39; on &#39;</span> <span class="o">+</span> <span class="nx">os</span><span class="p">.</span><span class="nx">hostname</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">+</span> <span class="s1">&#39;\n&#39;</span> <span class="o">+</span>
+      <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">_prepareStack</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+  <span class="p">};</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">sms</span><span class="p">.</span><span class="nx">To</span> <span class="o">||</span> <span class="o">!</span><span class="nx">sms</span><span class="p">.</span><span class="nx">From</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">sms</span><span class="p">.</span><span class="nx">truncate</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">sms</span><span class="p">.</span><span class="nx">Body</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">sms</span><span class="p">.</span><span class="nx">truncate</span><span class="p">(</span><span class="nx">sms</span><span class="p">.</span><span class="nx">Body</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Sending SMS message with crash information...&#39;</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">sms</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">sms</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">_this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;SMS not successfully sent: &#39;</span> <span class="o">+</span> <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
+      <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">_this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Done sending SMS&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">cb</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>sendEmail</code> sends an email built from the provided error (message first, then contents,
+then callstack).</p>
+
+<p><em>Note: the <code>sms</code> object, defaulted to the <code>Twilio</code> class from <code>thehelp-messaging</code> must
+have a <code>send()</code> method which takes an object with capitalized keys. Blame Twilio, not
+me!</em></p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">sendEmail</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">sendEmail</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">_this</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">development</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">cb</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="kd">var</span> <span class="nx">email</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">to</span><span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">THEHELP_LD_EMAIL_TO</span><span class="p">,</span>
+    <span class="nx">from</span><span class="o">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">THEHELP_LD_EMAIL_FROM</span><span class="p">,</span>
+    <span class="nx">subject</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">appName</span> <span class="o">+</span> <span class="s1">&#39; crashed on &#39;</span> <span class="o">+</span> <span class="nx">os</span><span class="p">.</span><span class="nx">hostname</span><span class="p">(),</span>
+    <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;app: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">appName</span> <span class="o">+</span> <span class="s1">&#39;\n&#39;</span> <span class="o">+</span>
+      <span class="s1">&#39;host: &#39;</span> <span class="o">+</span> <span class="nx">os</span><span class="p">.</span><span class="nx">hostname</span><span class="p">()</span>
+  <span class="p">};</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">email</span><span class="p">.</span><span class="nx">to</span> <span class="o">||</span> <span class="o">!</span><span class="nx">email</span><span class="p">.</span><span class="nx">from</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">email</span><span class="p">.</span><span class="nx">text</span> <span class="o">+=</span> <span class="s1">&#39;\n&#39;</span> <span class="o">+</span> <span class="s1">&#39;url: &#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">email</span><span class="p">.</span><span class="nx">text</span> <span class="o">+=</span> <span class="s1">&#39;\n\n&#39;</span> <span class="o">+</span> <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+  <span class="k">this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Sending email message with crash information...&#39;</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">email</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">_this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;email not successfully sent: &#39;</span> <span class="o">+</span> <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">err</span><span class="p">));</span>
+      <span class="k">return</span> <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">_this</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Done sending email&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">cb</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h1 id="utility-functions">Utility functions</h1></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the 'sendSMS' or 'sendEmail' targets were selected, initialize <code>this.email</code> and
+<code>this.sms</code></p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_setupMessaging</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">_setupMessaging</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_containsTarget</span><span class="p">(</span><span class="s1">&#39;sendSMS&#39;</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">sms</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">sms</span> <span class="o">||</span> <span class="k">new</span> <span class="nx">Twilio</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">sms</span><span class="p">.</span><span class="nx">send</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;sms object needs to have a send function!&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_containsTarget</span><span class="p">(</span><span class="s1">&#39;sendEmail&#39;</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">email</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">email</span> <span class="o">||</span> <span class="k">new</span> <span class="nx">Sendgrid</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">send</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;email object needs to have a send function!&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Because we don't have <code>lodash</code> as a dependency, we bind public methods to <code>this</code>
+manually.</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_bindAll</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">_bindAll</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">go</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">go</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">stderr</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">stderr</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">crashLog</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">crashLog</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">sendSMS</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">sendSMS</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">sendEmail</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">sendEmail</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Searches <code>this.targets</code> for the provided <code>query</code> value</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_containsTarget</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">_containsTarget</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">targets</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">targets</span> <span class="o">||</span> <span class="p">[];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">max</span> <span class="o">=</span> <span class="nx">targets</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">max</span><span class="p">;</span> <span class="nx">i</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">target</span> <span class="o">=</span> <span class="nx">targets</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">target</span> <span class="o">===</span> <span class="nx">query</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">};</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Uses <code>thehelp-core</code> to build a good textual summary of a supplied error. Also
+includes <code>options.url</code> if provided.</p></div></div><div class="code"><div class="wrapper"><span class="nx">LastDitch</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_buildEntry</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">_buildEntry</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">errString</span> <span class="o">=</span> <span class="nx">core</span><span class="p">.</span><span class="nx">breadcrumbs</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+  <span class="kd">var</span> <span class="nx">entry</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;crashed: &#39;</span> <span class="o">+</span> <span class="nx">errString</span><span class="p">,</span>
+    <span class="nx">timestamp</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">(),</span>
+    <span class="nx">level</span><span class="o">:</span> <span class="s1">&#39;error&#39;</span>
+  <span class="p">};</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">entry</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+    <span class="nx">entry</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;crashed handling &#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">errString</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="nx">entry</span><span class="p">;</span>
+<span class="p">};</span></div></div></div></div></body></html>
