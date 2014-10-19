@@ -7,9 +7,9 @@ var fs = require('fs');
 var os = require('os');
 
 var async = require('async');
-var winston = require('winston');
 
 var core = require('thehelp-core');
+var logShim = require('thehelp-log-shim');
 
 var messaging = require('thehelp-messaging');
 var Twilio = messaging.Twilio;
@@ -22,8 +22,9 @@ var Sendgrid = messaging.Sendgrid;
 (can set this with THEHELP_APP_NAME environment variable)
 + `development` - if set to true, neither email nor SMS messages be sent. If not set
  manally, is set to true if `process.env.NODE_ENV === 'development'`
-+ `log` - if you'd like to use something other than `winston` for logging, supply an
-object with `error`, `info` and `warn` keys (signature: `function(string)`)
++ `log` - if you'd like to use something other than what `thehelp-log-shim` provdes for
+logging, supply an object with `error`, `info` and `warn` keys (signature:
+`function(string)`)
 + `targets` - an array of the targets where you'd like error information to go. See
 `LastDitch.DEFAULT_TARGETS` and `LastDitch.ALL_TARGETS` below.
 + `timeout` - how long to wait for targets to return before calling `go()`'s provided
@@ -51,7 +52,7 @@ function LastDitch(options) {
   }
 
   this.timeout = options.timeout || 2000;
-  this.log = options.log || winston;
+  this.log = options.log || logShim('thehelp-last-ditch');
   this.targets = options.targets || LastDitch.DEFAULT_TARGETS;
 
   this.fs = fs;

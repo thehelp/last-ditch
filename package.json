@@ -6,14 +6,15 @@
   "dependencies": {
     "async": "0.9.x",
     "thehelp-core": "2.x",
-    "thehelp-messaging": "1.x",
-    "winston": "0.7.x"
+    "thehelp-log-shim": "1.x",
+    "thehelp-messaging": "1.x"
   },
   "devDependencies": {
     "blanket": "1.1.6",
     "grunt": "0.4.5",
     "thehelp-project": "3.3.1",
-    "thehelp-test": "3.1.0"
+    "thehelp-test": "3.3.0",
+    "winston": "0.8.1"
   },
 
   "scripts": {

@@ -8,6 +8,7 @@ Make sure you know when your Node.js process crashes: output the error to stderr
 
 * Super-easy default setup: logging of error info to stderr and a synchronous append to a log file.
 * Just a few more steps to sending SMS and Email via [`thehelp-messaging`](https://github.com/thehelp/messaging)
+* Can participate in your program's logging mechanism via [`thehelp-log-shim`](https://github.com/thehelp/log-shim) (logging is primarily around SMS/email send status, file access failures, etc.)
 
 ## Setup
 
