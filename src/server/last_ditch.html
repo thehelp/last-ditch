@@ -6,9 +6,9 @@
 <span class="kd">var</span> <span class="nx">os</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;os&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">async</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;async&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">winston</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;winston&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">core</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-core&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">logShim</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-log-shim&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">messaging</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;thehelp-messaging&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">Twilio</span> <span class="o">=</span> <span class="nx">messaging</span><span class="p">.</span><span class="nx">Twilio</span><span class="p">;</span>
@@ -19,8 +19,9 @@
 (can set this with THEHELP<em>APP</em>NAME environment variable)</li>
 <li><code>development</code> - if set to true, neither email nor SMS messages be sent. If not set
 manally, is set to true if <code>process.env.NODE_ENV === 'development'</code></li>
-<li><code>log</code> - if you'd like to use something other than <code>winston</code> for logging, supply an
-object with <code>error</code>, <code>info</code> and <code>warn</code> keys (signature: <code>function(string)</code>)</li>
+<li><code>log</code> - if you'd like to use something other than what <code>thehelp-log-shim</code> provdes for
+logging, supply an object with <code>error</code>, <code>info</code> and <code>warn</code> keys (signature:
+<code>function(string)</code>)</li>
 <li><code>targets</code> - an array of the targets where you'd like error information to go. See
 <code>LastDitch.DEFAULT_TARGETS</code> and <code>LastDitch.ALL_TARGETS</code> below.</li>
 <li><code>timeout</code> - how long to wait for targets to return before calling <code>go()</code>'s provided
@@ -48,7 +49,7 @@ variable)</li>
   <span class="p">}</span>
 
   <span class="k">this</span><span class="p">.</span><span class="nx">timeout</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">timeout</span> <span class="o">||</span> <span class="mi">2000</span><span class="p">;</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">log</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">log</span> <span class="o">||</span> <span class="nx">winston</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">log</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">log</span> <span class="o">||</span> <span class="nx">logShim</span><span class="p">(</span><span class="s1">&#39;thehelp-last-ditch&#39;</span><span class="p">);</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">targets</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">targets</span> <span class="o">||</span> <span class="nx">LastDitch</span><span class="p">.</span><span class="nx">DEFAULT_TARGETS</span><span class="p">;</span>
 
   <span class="k">this</span><span class="p">.</span><span class="nx">fs</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">;</span>
