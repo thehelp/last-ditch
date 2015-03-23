@@ -10,7 +10,6 @@
     "thehelp-messaging": "1.x"
   },
   "devDependencies": {
-    "blanket": "1.1.6",
     "grunt": "0.4.5",
     "thehelp-project": "3.4.1",
     "thehelp-test": "3.3.0",
@@ -19,13 +18,6 @@
 
   "scripts": {
     "test": "grunt"
-  },
-
-  "config": {
-    "blanket": {
-      "data-cover-only": "src",
-      "data-cover-never": "['lib/','node_modules/','test/','src/client']"
-    }
   },
 
   "description": "Make sure you know when your Node.js process crashes: output the error to stderr, append it to a file, send it via email, and send it via SMS. Cover all your bases in case of loss of filesystem access or internet connectivity.",
