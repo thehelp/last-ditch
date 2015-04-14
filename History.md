@@ -1,3 +1,7 @@
+## 1.2.0 (2015-04-14)
+
+* new `statsd` default target!
+
 ## 1.1.0 (2014-10-17)
 
 * `winston` no longer a dependency. If you want logging, you'll need to install a logging package yourself. More info: [`thehelp-log-shim`](https://github.com/thehelp/log-shim)
