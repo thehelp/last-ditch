@@ -221,4 +221,22 @@ describe('LastDitch', function() {
     });
   });
 
+  describe('#statsd', function() {
+    it('calls callback', function(done) {
+      lastDitch.statsd({}, {}, function() {
+        done();
+      });
+    });
+
+    it('calls stats.increment', function(done) {
+      lastDitch.stats = {
+        increment: sinon.stub().yields()
+      };
+      lastDitch.statsd({}, {}, function() {
+        expect(lastDitch).to.have.deep.property('stats.increment.callCount', 1);
+        done();
+      });
+    });
+  });
+
 });

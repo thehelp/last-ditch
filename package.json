@@ -5,6 +5,7 @@
 
   "dependencies": {
     "async": "0.9.x",
+    "node-statsd": "0.1.1",
     "thehelp-core": "2.x",
     "thehelp-log-shim": "1.x",
     "thehelp-messaging": "1.x"

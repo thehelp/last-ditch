@@ -14,7 +14,7 @@ describe('basic end-to-end', function() {
   });
 
   it('registers process-level handler, adds entry to crash.log', function(done) {
-    var child = fork('test/start.js', {silent: true});
+    var child = fork('test/start.js');
 
     child.on('exit', function(code) {
       expect(code).not.to.equal(0);

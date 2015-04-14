@@ -14,6 +14,7 @@ var logShim = require('thehelp-log-shim');
 var messaging = require('thehelp-messaging');
 var Twilio = messaging.Twilio;
 var Sendgrid = messaging.Sendgrid;
+var StatsD = require('node-statsd');
 
 /*
 `constructor` has no required parameters, but quite a few optional parameters:
@@ -39,7 +40,7 @@ variable)
 
 */
 function LastDitch(options) {
-  /*jshint maxcomplexity: 10 */
+  /*jshint maxcomplexity: 11 */
 
   options = options || {};
   this.appName = options.appName || process.env.THEHELP_APP_NAME || 'DefaultApp';
@@ -54,6 +55,9 @@ function LastDitch(options) {
   this.timeout = options.timeout || 2000;
   this.log = options.log || logShim('thehelp-last-ditch');
   this.targets = options.targets || LastDitch.DEFAULT_TARGETS;
+  this.stats = options.stats || new StatsD({
+    prefix: this.appName + '.'
+  });
 
   this.fs = fs;
 
@@ -63,8 +67,8 @@ function LastDitch(options) {
 
 module.exports = LastDitch;
 
-LastDitch.DEFAULT_TARGETS = ['stderr', 'crashLog'];
-LastDitch.ALL_TARGETS = ['stderr', 'crashLog', 'sendSMS', 'sendEmail'];
+LastDitch.DEFAULT_TARGETS = ['stderr', 'crashLog', 'statsd'];
+LastDitch.ALL_TARGETS = ['stderr', 'crashLog', 'statsd', 'sendSMS', 'sendEmail'];
 
 
 // Commonly-used Methods
@@ -151,6 +155,14 @@ LastDitch.prototype.crashLog = function crashLog(err, options, cb) {
       core.breadcrumbs.toString(err));
   }
   return process.nextTick(cb);
+};
+
+// `statsd` uses `node-statsd` to send a UDP packet to
+// [`statsd`](https://github.com/etsy/statsd), which you can set up to send to various
+// monitoring systems. It doesn't matter is `statsd` is running on this machine or not,
+// since we're using UDP.
+LastDitch.prototype.statsd = function statsd(err, options, cb) {
+  this.stats.increment('crashes', 1, cb);
 };
 
 /*
@@ -269,6 +281,7 @@ LastDitch.prototype._bindAll = function _bindAll() {
   this.go = this.go.bind(this);
   this.stderr = this.stderr.bind(this);
   this.crashLog = this.crashLog.bind(this);
+  this.statsd = this.statsd.bind(this);
   this.sendSMS = this.sendSMS.bind(this);
   this.sendEmail = this.sendEmail.bind(this);
 };
