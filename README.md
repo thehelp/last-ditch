@@ -6,7 +6,7 @@ Make sure you know when your Node.js process crashes: output the error to stderr
 
 ## Features
 
-* Super-easy default setup: logging of error info to stderr, synchronous append to a log file, and to a local [`statsd`](https://github.com/etsy/statsd) instance.
+* Super-easy default setup: logging of error info to stderr, synchronous append to a log file, and incrementing a [`statsd`](https://github.com/etsy/statsd) counter (`process.env.THEHELP_APP_NAME + '.crashes'`)
 * Just a few more steps to sending SMS and Email via [`thehelp-messaging`](https://github.com/thehelp/messaging)
 * Can participate in your program's logging mechanism via [`thehelp-log-shim`](https://github.com/thehelp/log-shim) (logging is primarily around SMS/email send status, file access failures, etc.)
 
@@ -36,7 +36,7 @@ var err = new Error('just testing things out!');
 lastDitch(err);
 ```
 
-Both of these will log to stderr, `crash.log` in the current working directory, and to `statsd` on the local machine/default port with the metric '[process.env.THEHELP_APP_NAME].crashes'. Use the `THEHELP_CRASH_LOG` environment variable to set the file path.
+Both of these will log to stderr, `crash.log` in the current working directory, and to `statsd` on the local machine/default port with the metric. Use the `THEHELP_CRASH_LOG` environment variable to set the file path.
 
 _Note: When you set the top-level handler, it will **exit the process** once it has logged the error._
 
