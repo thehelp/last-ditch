@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "grunt": "0.4.5",
-    "thehelp-project": "3.5.0",
+    "thehelp-project": "3.6.0",
     "thehelp-test": "3.4.1",
     "winston": "1.0.0 "
   },
