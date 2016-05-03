@@ -2,7 +2,7 @@
 
 # thehelp-last-ditch
 
-Make sure you know when your Node.js process crashes: output the error to stderr, append it to a file, send it via email, and send it via SMS. Cover all your bases in case of loss of filesystem access or internet connectivity.
+Make sure you know when your Node.js process crashes: output the error to stderr, append it to a file, send it via email, and send it via SMS. Cover all your bases in case of loss of filesystem access or internet connectivity.  [More information about `thehelp`.](https://blog.scottnonnenberg.com/the-state-of-thehelp/)
 
 ## Features
 
